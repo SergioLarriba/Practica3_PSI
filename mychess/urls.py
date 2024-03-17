@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import (path, include) 
+from models import api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,4 +25,5 @@ urlpatterns = [
     path('api/v1/',include('djoser.urls.authtoken')), #los que estan relacionados con los tokens los pilla de aqui
     path('api/v1/', include('models.urls')),
 
+    path(r'api/v1/mytokenlogin/', api.MyTokenCreateView.as_view()),
 ]
