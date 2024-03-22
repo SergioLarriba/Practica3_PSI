@@ -27,7 +27,7 @@ class ChessGameViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets
     #Override create method
     def create(self,request,*args,**kwargs):
         #Comprobar si hay una partida disponible
-        game = ChessGame.objects.filter(status='P').first()
+        game = ChessGame.objects.filter(status='pending').first()
         if game:
             #Si hay una partida disponible, unir al usuario a ella
             if game.whitePlayer:
@@ -57,7 +57,7 @@ class ChessGameViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets
                 #Llamar al metodo create de la clase padre
                 #return super().create(request,*args,**kwargs)   
                 response = super().create(request,*args,**kwargs)
-                return Response(response.data, status=status.HTTP_201_CREATED)
+                return Response(response.data, status=status.HTTP_201_CREATED)  #Test 5 y 6 fallan, esperan 200
 
     #Override update method
     def update(self,request,*args,**kwargs):
