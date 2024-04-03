@@ -27,8 +27,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('api/v1/', include('djoser.urls')), # creacion, listado usuarios los pilla de aqui
-    path('api/v1/',include('djoser.urls.authtoken')), #los que estan relacionados con los tokens los pilla de aqui
-    path('api/v1/', include('models.urls')),
+    path('api/v1/', include('djoser.urls.authtoken')), # los que estan relacionados con los tokens los pilla de aqui
+    path('api/v1/', include('models.urls')), # los que estan relacionados con los juegos los pilla de aqui
 
     path(r'api/v1/mytokenlogin/', api.MyTokenCreateView.as_view()),
     path(r'api/v1/', include(router.urls)),

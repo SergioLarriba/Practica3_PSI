@@ -22,10 +22,14 @@ class Player(AbstractUser):
         return f'{self.username} ({self.rating})'
 
 class ChessGame(models.Model):
+    ACTIVE = 'active'
+    PENDING = 'pending'
+    FINISHED = 'finished'
+    
     STATUS_CHOICES = [
-        ('P','pending'),
-        ('A','active'),
-        ('F','finished')
+        (PENDING,'pending'),
+        (ACTIVE ,'active'),
+        (FINISHED,'finished')
     ]
 
     DEFAULT_BOARD_STATE = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -46,11 +50,11 @@ class ChessGame(models.Model):
         blackPlayer = f'{self.blackPlayer.username} ({self.blackPlayer.rating})' if self.blackPlayer else 'unknown'
         return f'GameID=({self.id}) {whitePlayer} vs {blackPlayer}'
 
-#CASCADE: si se borra un jugador se borran todas las partidas en las que participa
-#SET_NULL: si se borra un jugador se pone a null el campo winner
+# CASCADE: si se borra un jugador se borran todas las partidas en las que participa
+# SET_NULL: si se borra un jugador se pone a null el campo winner
 
 class ChessMove(models.Model):
-    id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True) # clave primaria sea el id -> me lo crea solo
     game = models.ForeignKey(ChessGame, on_delete=models.CASCADE, related_name='moves')
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     move_from = models.CharField(max_length=2)

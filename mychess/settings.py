@@ -31,17 +31,19 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework', # api rest
+    'rest_framework.authtoken', # api rest
+    'djoser', # api authentification
+    'models', # la aplicacione que yo he creado 
+    'corsheaders', # vue -> para el cliente 
+    'channels', # para el websocket
+    'daphne', # para el websocket
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework', # api rest
-    'rest_framework.authtoken', # api rest
-    'djoser', # api authentification
-    'models', # la aplicacione que yo he creado 
-    'corsheaders', # vue -> para el cliente 
 ]
 
 MIDDLEWARE = [
@@ -84,7 +86,7 @@ TEMPLATES = [
 
 #Hacemos app asincrona
 #WSGI_APPLICATION = 'mychess.wsgi.application'
-ASGI_APPLICATION = 'mychess.asgi.application'
+ASGI_APPLICATION = 'mychess.asgi.application'    #Porque vamos a usar websockets
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -155,3 +157,11 @@ CORS_ALLOWED_ORIGINS = [
 
 
 AUTH_USER_MODEL = 'models.Player'
+
+
+# Websocket
+CHANNEL_LAYERS = { 
+    'default': { 
+        'BACKEND': 'channels.layers.InMemoryChannelLayer' 
+    } 
+}
