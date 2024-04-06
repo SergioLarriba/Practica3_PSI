@@ -114,6 +114,13 @@ class ChessConsumer(WebsocketConsumer):
                 chess_move = ChessMove(move_from=_from, move_to=to,
                                        game=game, player=player,
                                        promotion=promotion)
+                board  = chess.Board(game.board_state)
+                
+                # Comprueba si el movimiento finaliza el juego
+                if board.is_checkmate() or board.is_stalemate() or board.is_insufficient_material():
+                    # Si el juego ha terminado, cambia el estado del juego a 'finished'
+                    game = ChessGame.objects.get(id=self.room_name)
+                    game.status = 'finished'
                 chess_move.save()
             except Exception:
                 # Si hay un error al guardar el movimiento,
