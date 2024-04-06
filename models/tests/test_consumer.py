@@ -7,16 +7,17 @@ from channels.testing import WebsocketCommunicator
 from django.urls import path
 from channels.routing import URLRouter
 from channels.db import database_sync_to_async
+from models.routing import websocket_urlpatterns
 import logging
 import chess
 from channels.layers import get_channel_layer
+from asgiref.sync import sync_to_async
 
 User = get_user_model()
 application = URLRouter([
     path("ws/play/<int:gameID>/", ChessConsumer.as_asgi()),
 ])
-
-
+ 
 class ChessConsumerTests(ChannelsLiveServerTestCase):
     """Test the chess consumer"""
     def setUp(self):
@@ -406,3 +407,7 @@ class ChessConsumerTests(ChannelsLiveServerTestCase):
         import asyncio
         with self.assertRaises(asyncio.TimeoutError):
             _ = await communicator.receive_json_from()
+            
+    
+            
+    

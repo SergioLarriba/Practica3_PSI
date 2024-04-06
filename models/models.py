@@ -105,6 +105,6 @@ class ChessMove(models.Model):
 
     def __str__(self):
         if self.promotion:
-            return (f'{self.player} {self.move_from} - \
-                    > {self.move_to} {self.promotion}')
+            return (f'{self.player} {self.move_from} -'
+                    f'> {self.move_to} {self.promotion}')
         return f'{self.player}: {self.move_from} -> {self.move_to}'

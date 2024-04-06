@@ -67,6 +67,35 @@ class ChessGameAPITest(TestCase):
         self.client.force_authenticate(user=self.user2)
         response = self.client.post(f'{URL}', {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        
+    def test_008_delete_anomalous_games(self):
+        """Delete all games that have a whitePlayer or blackPlayer
+        that does not exist in the User table."""
+        game = ChessGame.objects.create(
+            status=ChessGame.ACTIVE,
+            whitePlayer=self.user1)
+        game.save()
+        self.client.force_authenticate(user=self.user2)
+        response = self.client.post(f'{URL}', {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ChessGame.objects.count(), 0) 
+        self.assertEqual(response.data['detail'], 'Create Error: Anomalous games found and deleted')
+        
+    def test_009_check_if_there_is_active_game(self):
+        """Check if there is an active game. If there is one, create 
+        should return an error. """
+        game = ChessGame.objects.create(
+            status=ChessGame.ACTIVE, 
+            whitePlayer=self.user1, 
+            blackPlayer=self.user2)
+        game.save() 
+        
+        client2 = APIClient()
+        self.client.force_authenticate(user=self.user1)
+        client2.force_authenticate(user=self.user2)
+        response = self.client.post(f'{URL}', {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['detail'], 'Create Error: Game is already active')       
 
 
 class MyTokenCreateViewTest(TestCase):

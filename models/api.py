@@ -35,15 +35,15 @@ class ChessGameViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin,
         if anomalous_games.exists():
             # Los elimino
             anomalous_games.delete()
-            return Response({'detail': 'Create Error: \
-                            Anomalous games found and deleted'},
+            return Response({'detail': ('Create Error: '
+                             'Anomalous games found and deleted')},
                             status=status.HTTP_400_BAD_REQUEST)
 
         # Comprobar si hay un juego activo
         active_game = ChessGame.objects.filter(status=ChessGame.ACTIVE).first()
         if active_game:
-            return Response({'detail': 'Create Error: \
-                            Game is already active'},
+            return Response({'detail': ('Create Error: '
+                            'Game is already active')},
                             status=status.HTTP_400_BAD_REQUEST)
 
         # 1 - Verificar si hay juegos disponibles con un jugador ausente ->
@@ -75,20 +75,16 @@ class ChessGameViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin,
     def update(self, request, *args, **kwargs):
         game = kwargs.get('game_instance')
 
-        if game is None:
-            return Response({'detail': 'Update Error: No game provided'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        else:
-            # 1 - Cambio el estado a active
-            game.status = ChessGame.ACTIVE
+        # 1 - Cambio el estado a active
+        game.status = ChessGame.ACTIVE
 
-            # 2 - Asigna al usuario actual como el jugador
-            # opuesto al que ya está en el juego
-            # request.user = usuario que hizo la solicitud
-            if game.whitePlayer is None:
-                game.whitePlayer = request.user
-            elif game.blackPlayer is None:
-                game.blackPlayer = request.user
+        # 2 - Asigna al usuario actual como el jugador
+        # opuesto al que ya está en el juego
+        # request.user = usuario que hizo la solicitud
+        if game.whitePlayer is None:
+            game.whitePlayer = request.user
+        elif game.blackPlayer is None:
+            game.blackPlayer = request.user
 
-            game.save()
-            return super().update(request, *args, **kwargs)
+        game.save()
+        return super().update(request, *args, **kwargs)

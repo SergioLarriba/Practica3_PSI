@@ -5,6 +5,22 @@ from models.models import Player, ChessGame, ChessMove
 User = get_user_model()
 
 
+class myClassViewTest(TestCase):
+    def test_001_get(self):
+        """Test the get method of myClassView"""
+        # Create a new user
+        user = User.objects.create_user(
+            username='testuser',
+            password='testpassword'
+        )
+        # Authenticate the user
+        self.client.force_login(user)
+        # Send a GET request
+        response = self.client.get('/api/v1/myclassView/')
+        # Check if the response is correct
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'message': 'Got some data!'})
+
 class PlayerModelTest(TestCase):
     def test_001_player_str_method(self):
         "str method should return username and rating"
@@ -192,3 +208,26 @@ class ChessMoveModelTest(TestCase):
             "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1"
             " b kq - 1 1"
         )
+        
+    def test_026_str_with_no_promotion(self):
+        move = ChessMove.objects.create(
+            game=self.game,
+            player=self.player1,
+            move_from='e2',
+            move_to='e4'
+        )
+        self.assertEqual(str(move), 'player1 (1500): e2 -> e4')
+    
+    def test_027_str_with_promotion(self):
+        fen = "rnbqkbnr/Pppppppp/p7/8/8/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1"
+        self.game.board_state = fen
+        self.game.save()
+        move = ChessMove(
+            game=self.game,
+            player=self.player1,
+            move_from='a7',
+            move_to='b8',
+            promotion='q'
+        )
+        move.save()
+        self.assertEqual(str(move), 'player1 (1500) a7 -> b8 q')

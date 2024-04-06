@@ -108,40 +108,21 @@ class ChessConsumer(WebsocketConsumer):
                 return
 
             # Si el movimiento es válido, lo almacena en la base de datos
-            try:
-                player = Player.objects.get(id=self.user_id)
-                game = ChessGame.objects.get(id=self.gameID)
-                chess_move = ChessMove(move_from=_from, move_to=to,
-                                       game=game, player=player,
-                                       promotion=promotion)
-                board = chess.Board(game.board_state)
+            player = Player.objects.get(id=self.user_id)
+            game = ChessGame.objects.get(id=self.gameID)
+            chess_move = ChessMove(move_from=_from, move_to=to,
+                                   game=game, player=player,
+                                   promotion=promotion)
+            board = chess.Board(game.board_state)
 
-                # Comprueba si el movimiento finaliza el juego
-                if board.is_checkmate() or board.is_stalemate() \
-                   or board.is_insufficient_material():
-                    # Si el juego ha terminado, cambia el estado del juego
-                    # a 'finished'
-                    game = ChessGame.objects.get(id=self.room_name)
-                    game.status = 'finished'
-                chess_move.save()
-            except Exception:
-                # Si hay un error al guardar el movimiento,
-                # envía un mensaje de error
-                async_to_sync(self.channel_layer.group_send)(
-                    self.room_group_name,
-                    {
-                        'type': 'move_cb',
-                        'message':
-                        {
-                            'type': 'error',
-                            'from': _from,
-                            'to': to,
-                            'playerID': playerID,
-                            'promotion': promotion
-                        }
-                    }
-                )
-                return
+            # Comprueba si el movimiento finaliza el juego
+            if board.is_checkmate() or board.is_stalemate() \
+               or board.is_insufficient_material():
+                # Si el juego ha terminado, cambia el estado del juego
+                # a 'finished'
+                game.status = 'finished'
+                game.save()
+            chess_move.save()
 
             # Envía el movimiento a todos los jugadores en el mismo juego
             async_to_sync(self.channel_layer.group_send)(
