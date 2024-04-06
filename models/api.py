@@ -19,7 +19,6 @@ class MyTokenCreateView(TokenCreateView):
         return response
 
  
-# Create your models here.
 class ChessGameViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets.GenericViewSet):
 
     queryset = ChessGame.objects.all()

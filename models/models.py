@@ -14,8 +14,6 @@ class myClassView(APIView):
 
 
 class Player(AbstractUser):
-    #Default user class, just in case we want to add something extra in he future
-    # add extra fields here
     rating = models.IntegerField(default=-1)
 
     def __str__(self):

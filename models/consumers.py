@@ -72,11 +72,16 @@ class ChessConsumer(WebsocketConsumer):
     
     # 2º Peticion y cualquiera -> la maneja receive 
     def receive(self, text_data):
-        # pdb.set_trace() 
         data = json.loads(text_data)
         message_type = data.get('type')
         
         game = ChessGame.objects.get(id=self.gameID)
+        if game.status != 'active':
+            async_to_sync(self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': 'Error: invalid move (game is not active)'
+            })))
+            return 
 
         if message_type == 'move':
             # Extraccion de los datos 
@@ -84,6 +89,11 @@ class ChessConsumer(WebsocketConsumer):
             to = data.get('to')
             playerID = data.get('playerID')
             promotion = data.get('promotion')
+            
+            # Comprueba si el movimiento es válido
+            if self.validate_move_in_game(_from, to, playerID, promotion) is False:
+                self.send_error(f'Error: invalid move {_from}{to}')
+                return 
 
             # Si el movimiento es válido, lo almacena en la base de datos
             try:
@@ -93,11 +103,12 @@ class ChessConsumer(WebsocketConsumer):
                 chess_move.save()
             except Exception as e:
                 # Si hay un error al guardar el movimiento, envía un mensaje de error
-                async_to_sync(self.channel_layer.group_send(({
-                   self.room_group_name,
+                async_to_sync(self.channel_layer.group_send)(
+                    self.room_group_name,
                     {
                         'type': 'move_cb',
-                        'content': {
+                        'message': 
+                        {
                             'type': 'error',
                             'from': _from,
                             'to': to,
@@ -105,7 +116,7 @@ class ChessConsumer(WebsocketConsumer):
                             'promotion': promotion 
                         }
                     }
-                })))
+                ) 
                 return
 
             # Envía el movimiento a todos los jugadores en el mismo juego
@@ -113,7 +124,7 @@ class ChessConsumer(WebsocketConsumer):
                 self.room_group_name,
                 {
                     'type': 'move_cb',
-                    'content':
+                    'message':
                     {
                         'type': 'move',
                         'from': _from,
@@ -131,9 +142,9 @@ class ChessConsumer(WebsocketConsumer):
         connection. It sends the message to the client. 
         """
         
-        message = event['content']['message']
-        status = event['content']['status']
-        playerID = event['content']['playerID'] 
+        message = event['message']['message']
+        status = event['message']['status']
+        playerID = event['message']['playerID'] 
         
         # Send message to WebSocket
         async_to_sync(self.send(text_data=json.dumps({
@@ -147,14 +158,15 @@ class ChessConsumer(WebsocketConsumer):
         
     def move_cb(self, event):
         # Extrae los detalles del movimiento del evento
-        _from = event['content']['from']
-        to = event['content']['to']
-        playerID = event['content']['playerID']
-        promotion = event['content']['promotion']
+        _from = event['message']['from']
+        to = event['message']['to']
+        playerID = event['message']['playerID']
+        promotion = event['message']['promotion']
+        type = event['message']['type']
     
         # Envía el movimiento a todos los jugadores en el mismo juego
         async_to_sync(self.send(text_data=json.dumps({
-            'type': 'move',
+            'type': type,
             'from': _from,
             'to': to,
             'playerID': playerID,
@@ -179,6 +191,21 @@ class ChessConsumer(WebsocketConsumer):
         ChessGame.objects.filter(id=game_id, blackPlayer=self.user_id).exists():
             return True
         return False
+    
+    # Comprueba si el movimiento es válido 
+    def validate_move_in_game(self, _from, to, playerID, promotion): 
+        board = chess.Board()
+        move = chess.Move.from_uci(_from + to + (promotion if promotion else ''))
+        if move not in board.legal_moves:
+            return False 
+        return True 
+    
+    # Mandar error
+    def send_error(self, message): 
+        async_to_sync(self.send(text_data=json.dumps({
+            'type': 'error',
+            'message': message
+        })))
             
         
             
