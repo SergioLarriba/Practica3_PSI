@@ -22,42 +22,50 @@ class ChessConsumer(WebsocketConsumer):
         
         # Comprueba si el token es válido 
         if self.validate_token(self.token_key) is False:
-            async_to_sync(self.send(text_data = json.dumps({
-                'type': 'error', 
-                'message': 'Invalid token. Connection not authorized.'
-            }))) 
-            async_to_sync(self.close()) 
-            return
+            message = 'Invalid token. Connection not authorized.'
+            self.send_error(message) 
         
         # Comprueba si el game id es válido 
         if not ChessGame.objects.filter(id=self.room_group_name).exists():
-            async_to_sync(self.send(text_data = json.dumps({
-                'type': 'error', 
-                'message': f'Invalid game with id {self.room_group_name}'
-            }))) 
-            async_to_sync(self.close()) 
-            return
+            message = f'Invalid game with id {self.room_group_name}'
+            self.send_error(message)
         
         self.user_id = self.get_token_from_user(self.token_key)
         # Comprueba si el usuario es válido del game_id 
         if self.validate_user_in_game(self.gameID) is False:
-            async_to_sync(self.send(text_data = json.dumps({
-                'type': 'error', 
-                'message': f'Invalid game with id {self.gameID}'
-            }))) 
-            async_to_sync(self.close()) 
-            return
+            message = f'Invalid game with id {self.gameID}'
+            self.send_error(message)
         
-
+        # Añade el canal del cliente al grupo "room_group_name" -> asi se puede enviar mensajes a todos los clientes en el mismo juego
         async_to_sync(self.channel_layer.group_add)(self.room_group_name, self.channel_name)
+
+        try:
+            game = ChessGame.objects.get(id=self.gameID)
+        except ChessGame.DoesNotExist:
+            self.send_error(f'Error: game with id {self.gameID} does not exist')
+            return
+
+        
+        if game.whitePlayer and game.blackPlayer and game.status != 'finished':
+            game.status = 'active'
+            game.save()
+            status = 'active'
+        else:
+            status = 'pending'
         
         # Enviar un mensaje después de aceptar la conexión
-        async_to_sync(self.send(text_data=json.dumps({
-            'type': 'game',
-            'message': 'OK',
-            'status': 'connected',
-            'playerID': self.user_id 
-        }))) 
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, 
+            {
+                'type': 'game_cb',
+                'message': {
+                    'type': 'game',
+                    'message': 'OK',
+                    'status': status,
+                    'playerID': self.user_id
+                }
+            }
+        ) 
         return 
         
         
@@ -66,9 +74,8 @@ class ChessConsumer(WebsocketConsumer):
         This method is called when the WebSocket connection is closed. 
         It removes the channel from the room group.
         """
+        async_to_sync(self.channel_layer.group_discard)(self.room_group_name, self.channel_name)
         
-        async_to_sync(self.channel_layer.group_add)(self.room_group_name, self.channel_name)
-
     
     # 2º Peticion y cualquiera -> la maneja receive 
     def receive(self, text_data):
@@ -77,6 +84,7 @@ class ChessConsumer(WebsocketConsumer):
         
         game = ChessGame.objects.get(id=self.gameID)
         if game.status != 'active':
+            #print("Error, partida no activa")
             async_to_sync(self.send(text_data=json.dumps({
                 'type': 'error',
                 'message': 'Error: invalid move (game is not active)'
@@ -89,9 +97,12 @@ class ChessConsumer(WebsocketConsumer):
             to = data.get('to')
             playerID = data.get('playerID')
             promotion = data.get('promotion')
-            
+
             # Comprueba si el movimiento es válido
             if self.validate_move_in_game(_from, to, playerID, promotion) is False:
+                #print("Movimientos validos: ", chess.Board(game.board_state).legal_moves)
+                #print("Movimiento invalido: ", _from, to)
+                #print("Error, movimiento no valido")
                 self.send_error(f'Error: invalid move {_from}{to}')
                 return 
 
@@ -101,7 +112,9 @@ class ChessConsumer(WebsocketConsumer):
                 game = ChessGame.objects.get(id=self.gameID)
                 chess_move = ChessMove(move_from=_from, move_to=to, game=game, player=player, promotion=promotion)
                 chess_move.save()
+                #print("Movimiento guardado")
             except Exception as e:
+                #print("Error al guardar el movimiento")
                 # Si hay un error al guardar el movimiento, envía un mensaje de error
                 async_to_sync(self.channel_layer.group_send)(
                     self.room_group_name,
@@ -148,12 +161,10 @@ class ChessConsumer(WebsocketConsumer):
         
         # Send message to WebSocket
         async_to_sync(self.send(text_data=json.dumps({
-            self.room_group_name,{
-                'type': 'game',
-                'message': message, 
-                'status': status,
-                'playerID': playerID
-            }
+            'type': 'game',
+            'message': message, 
+            'status': status,
+            'playerID': playerID
         })))
         
     def move_cb(self, event):
@@ -194,20 +205,19 @@ class ChessConsumer(WebsocketConsumer):
     
     # Comprueba si el movimiento es válido 
     def validate_move_in_game(self, _from, to, playerID, promotion): 
-        board = chess.Board()
+        game = ChessGame.objects.get(id=self.gameID)
+        board = chess.Board(game.board_state)
         move = chess.Move.from_uci(_from + to + (promotion if promotion else ''))
         if move not in board.legal_moves:
             return False 
         return True 
     
     # Mandar error
-    def send_error(self, message): 
+    def send_error(self, message):
+        #print("Enviando Error") 
         async_to_sync(self.send(text_data=json.dumps({
             'type': 'error',
             'message': message
         })))
-            
-        
-            
-        
-    
+        #async_to_sync(self.close()) 
+        return
