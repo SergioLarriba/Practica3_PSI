@@ -8,7 +8,8 @@ from random import choice
 from django.db.models import Q
 from rest_framework.request import Request
 
-#Añadir user_id y rating a la respuesta ya que djoser no lo ofrece por defecto
+
+# Añadir user_id y rating a la respuesta ya que djoser no lo ofrece por defecto
 class MyTokenCreateView(TokenCreateView):
     def _action(self, serializer):
         response = super()._action(serializer)
@@ -18,14 +19,15 @@ class MyTokenCreateView(TokenCreateView):
         response.data['rating'] = tokenObject.user.rating
         return response
 
- 
-class ChessGameViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets.GenericViewSet):
+
+class ChessGameViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin,
+                       viewsets.GenericViewSet):
 
     queryset = ChessGame.objects.all()
     serializer_class = ChessGameSerializer
 
-    def create(self,request,*args,**kwargs):
-        # Detectar anomalias -> eliminarlas en caso de que haya 
+    def create(self, request, *args, **kwargs):
+        # Detectar anomalias -> eliminarlas en caso de que haya
         anomalous_games = ChessGame.objects.filter(
             Q(whitePlayer__isnull=True) | Q(blackPlayer__isnull=True),
             ~Q(status=ChessGame.PENDING)
@@ -33,19 +35,25 @@ class ChessGameViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets
         if anomalous_games.exists():
             # Los elimino
             anomalous_games.delete()
-            return Response({'detail': 'Create Error: Anomalous games found and deleted'}, status=status.HTTP_400_BAD_REQUEST)
- 
-        
+            return Response({'detail': 'Create Error: \
+                            Anomalous games found and deleted'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         # Comprobar si hay un juego activo
         active_game = ChessGame.objects.filter(status=ChessGame.ACTIVE).first()
         if active_game:
-            return Response({'detail':'Create Error: Game is already active'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 1 - Verificar si hay juegos disponibles con un jugador ausente -> me devuelve la primera clase de Chessgame que lo cumpla 
-        game = ChessGame.objects.filter(Q(whitePlayer__isnull=True) | Q(blackPlayer__isnull=True), status=ChessGame.PENDING).first()        
-        # 2 - Si hay una partida -> Unir al usuario a ella 
+            return Response({'detail': 'Create Error: \
+                            Game is already active'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # 1 - Verificar si hay juegos disponibles con un jugador ausente ->
+        # me devuelve la primera clase de Chessgame que lo cumpla
+        game = ChessGame.objects.filter(Q(whitePlayer__isnull=True) |
+                                        Q(blackPlayer__isnull=True),
+                                        status=ChessGame.PENDING).first()
+        # 2 - Si hay una partida -> Unir al usuario a ella
         if game and game.status == ChessGame.PENDING:
-            self.kwargs['pk'] = game.id 
+            self.kwargs['pk'] = game.id
             return self.update(request, *args, **kwargs, game_instance=game)
         else:
             # 2.1 - Crear una partida nueva y establecer estado a pending
@@ -53,7 +61,7 @@ class ChessGameViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets
             mutable_data['status'] = ChessGame.PENDING
 
             # Asignar aleatoriamente el color
-            if choice([True,False]):
+            if choice([True, False]):
                 mutable_data['whitePlayer'] = request.user.id
             else:
                 mutable_data['blackPlayer'] = request.user.id
@@ -61,25 +69,26 @@ class ChessGameViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, viewsets
             # Crear una nueva instancia de Request con los datos modificados
             new_request = Request(request._request)
             new_request._full_data = mutable_data
-                        
-            return super().create(new_request, *args, **kwargs)  
+            return super().create(new_request, *args, **kwargs)
 
-    # Unir al jugador a un juego existente 
+    # Unir al jugador a un juego existente
     def update(self, request, *args, **kwargs):
         game = kwargs.get('game_instance')
-        
-        if game is None: 
-            return Response({'detail':'Update Error: No game provided'}, status=status.HTTP_400_BAD_REQUEST)
-        else:  
-            # 1 - Cambio el estado a active 
+
+        if game is None:
+            return Response({'detail': 'Update Error: No game provided'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # 1 - Cambio el estado a active
             game.status = ChessGame.ACTIVE
-                
-            # 2 - Asigna al usuario actual como el jugador opuesto al que ya está en el juego
-            # request.user = usuario que hizo la solicitud 
-            if game.whitePlayer is None: 
+
+            # 2 - Asigna al usuario actual como el jugador
+            # opuesto al que ya está en el juego
+            # request.user = usuario que hizo la solicitud
+            if game.whitePlayer is None:
                 game.whitePlayer = request.user
-            elif game.blackPlayer is None: 
-                game.blackPlayer = request.user 
-                
+            elif game.blackPlayer is None:
+                game.blackPlayer = request.user
+
             game.save()
             return super().update(request, *args, **kwargs)
