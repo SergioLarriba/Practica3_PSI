@@ -116,7 +116,12 @@ DATABASES = {
     }
 }
 """
-DATABASES = {}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',  # Por ejemplo, para SQLite
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 LOCALPOSTGRES = os.environ.get('LOCALPOSTGRES')
 NEON_URL = os.environ.get('NEON_URL')
