@@ -123,8 +123,8 @@ DATABASES = {
     }
 }
 
-LOCALPOSTGRES = os.environ.get('LOCALPOSTGRES')
-NEON_URL = os.environ.get('NEON_URL')
+LOCALPOSTGRES = 'postgresql://alumnodb:alumnodb@localhost:5432/p3_psi'
+NEON_URL = 'postgresql://sergio3c2003:KEyS7aWpN8hv@ep-autumn-resonance-a2nl6rut.eu-central-1.aws.neon.tech/p3_psi?sslmode=require' 
 
 if 'TESTING' in os.environ:
     databaseenv = dj_database_url.config(default=LOCALPOSTGRES, conn_max_age=600)
