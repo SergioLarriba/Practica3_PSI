@@ -131,8 +131,7 @@ if 'TESTING' in os.environ:
 else: 
     databaseenv = dj_database_url.config(default=NEON_URL, conn_max_age=600)
     
-DATABASES['default'] = databaseenv
-
+DATABASES['default'].update(databaseenv)
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
