@@ -39,7 +39,7 @@ if 'DEBUG' in os.environ:
 else: 
     DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1'] 
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'practica3-psi.onrender.com'] 
 
 # Application definition
 
@@ -183,11 +183,12 @@ DJOSER = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://practica3-psi.onrender.com", 
 ]
 
+CSRF_TRUSTED_ORIGINS = ['https://practica3-psi.onrender.com']
 
 AUTH_USER_MODEL = 'models.Player'
-
 
 # Websocket
 CHANNEL_LAYERS = { 
@@ -195,3 +196,7 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer' 
     } 
 }
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
