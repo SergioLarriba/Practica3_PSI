@@ -43,14 +43,14 @@ class ChessGame(models.Model):
                               default='pending')
     board_state = models.TextField(default=DEFAULT_BOARD_STATE)   # Formato FEN
     start_time = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True, blank=True)
     timeControl = models.CharField(max_length=15, default='30')
     whitePlayer = models.ForeignKey(Player, on_delete=models.CASCADE,
-                                    related_name='whitePlayer', null=True)
+                                    related_name='whitePlayer', null=True, blank=True)
     blackPlayer = models.ForeignKey(Player, on_delete=models.CASCADE,
-                                    related_name='blackPlayer', null=True)
+                                    related_name='blackPlayer', null=True, blank=True)
     winner = models.ForeignKey(Player, on_delete=models.SET_NULL,
-                               related_name='winner', null=True)
+                               related_name='winner', null=True, blank=True)
 
     def __str__(self):
         # board = chess.Board(self.board_state)

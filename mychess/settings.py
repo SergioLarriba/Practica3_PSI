@@ -11,22 +11,35 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os 
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Cargar las variables de entorno desde el fichero .env 
+load_dotenv(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qhramw=p-0@-c8sijlz2c_#)vlfwevb1ny5j_-d$8oawo0pdy0'
+# SECRET_KEY = 'django-insecure-qhramw=p-0@-c8sijlz2c_#)vlfwevb1ny5j_-d$8oawo0pdy0'
+if 'RENDER' in os.environ:
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+else: 
+    SECRET_KEY = os.environ.get('SECRET_KEY', 
+                                default = 'django-insecure-qhramw=p-0@-c8sijlz2c_#)vlfwevb1ny5j_-d$8oawo0pdy0')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = os.environ.get('DEBUG')
+if 'DEBUG' in os.environ:
+    DEBUG = os.environ.get('DEBUG').lower() in ['true', '1', 't']
+else: 
+    DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1'] 
 
 # Application definition
 
@@ -91,6 +104,7 @@ ASGI_APPLICATION = 'mychess.asgi.application'    #Porque vamos a usar websockets
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 # Base de datos local 'p3_psi' -> alumnodb, alumnodb
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -101,7 +115,17 @@ DATABASES = {
         'PORT': '',
     }
 }
+"""
+DATABASES = {}
 
+LOCALPOSTGRES = os.environ.get('LOCALPOSTGRES')
+
+if 'TESTING' in os.environ:
+    databaseenv = dj_database_url.parse(LOCALPOSTGRES, conn_max_age=600)
+else: 
+    databaseenv = dj_database_url.config(conn_max_age=600, default=LOCALPOSTGRES)
+    
+DATABASES['default'] = databaseenv
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -120,7 +144,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
