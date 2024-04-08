@@ -119,11 +119,12 @@ DATABASES = {
 DATABASES = {}
 
 LOCALPOSTGRES = os.environ.get('LOCALPOSTGRES')
+NEON_URL = os.environ.get('NEON_URL')
 
 if 'TESTING' in os.environ:
-    databaseenv = dj_database_url.parse(LOCALPOSTGRES, conn_max_age=600)
+    databaseenv = dj_database_url.config(default=LOCALPOSTGRES, conn_max_age=600)
 else: 
-    databaseenv = dj_database_url.config(conn_max_age=600, default=LOCALPOSTGRES)
+    databaseenv = dj_database_url.config(default=NEON_URL, conn_max_age=600)
     
 DATABASES['default'] = databaseenv
 

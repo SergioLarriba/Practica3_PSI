@@ -1,4 +1,4 @@
-export DJANGOPORT := 8001
+export DJANGOPORT := 8000
 export DEBUG := True
 PSQL = psql
 CMD = python3 manage.py
