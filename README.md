@@ -20,15 +20,7 @@ Repositorio privado de la práctica 3 de Proyecto de Sistemas Informáticos
   - $ coverage run --omit="*/test*" --source=models ./manage.py test models.tests
   - $ coverage report -m -i
 
-### Resultados de la ejecución satisfactoria de los tests
 
-Resultado del coverage run: 
-
-![imagen](https://github.com/SergioLarriba/Practica3_PSI/assets/98891869/c6f18c40-c1ac-4b10-b289-fb8cd783bb79)
-
-Resultado del coverage report: 
-
-![imagen](https://github.com/SergioLarriba/Practica3_PSI/assets/98891869/7ce3afc6-8a6d-483f-bd60-dabe87ccd0bd)
 
 
 
