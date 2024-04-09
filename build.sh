@@ -8,4 +8,4 @@ pip install python-dotenv
 python3 manage.py collectstatic --no-input
 python3 manage.py migrate
 
-python3 manage.py createsu 
+# python3 manage.py createsu 
