@@ -46,9 +46,11 @@ class ChessGame(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)
     timeControl = models.CharField(max_length=15, default='30')
     whitePlayer = models.ForeignKey(Player, on_delete=models.CASCADE,
-                                    related_name='whitePlayer', null=True, blank=True)
+                                    related_name='whitePlayer', null=True,
+                                    blank=True)
     blackPlayer = models.ForeignKey(Player, on_delete=models.CASCADE,
-                                    related_name='blackPlayer', null=True, blank=True)
+                                    related_name='blackPlayer', null=True,
+                                    blank=True)
     winner = models.ForeignKey(Player, on_delete=models.SET_NULL,
                                related_name='winner', null=True, blank=True)
 
