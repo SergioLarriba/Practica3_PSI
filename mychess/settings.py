@@ -25,7 +25,7 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-qhramw=p-0@-c8sijlz2c_#)vlfwevb1ny5j_-d$8oawo0pdy0'
+
 if 'RENDER' in os.environ:
     SECRET_KEY = os.environ.get('SECRET_KEY')
 else: 
@@ -33,7 +33,7 @@ else:
                                 default = 'django-insecure-qhramw=p-0@-c8sijlz2c_#)vlfwevb1ny5j_-d$8oawo0pdy0')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.environ.get('DEBUG')
+
 if 'DEBUG' in os.environ:
     DEBUG = os.environ.get('DEBUG').lower() in ['true', '1', 't']
 else: 
@@ -129,11 +129,11 @@ LOCALPOSTGRES = 'postgresql://alumnodb:alumnodb@localhost:5432/p3_psi'
 NEON_URL = 'postgresql://sergio3c2003:KEyS7aWpN8hv@ep-autumn-resonance-a2nl6rut.eu-central-1.aws.neon.tech/p3_psi?sslmode=require' 
 
 if 'TESTING' in os.environ:
-    databaseenv = dj_database_url.parse(NEON_URL, conn_max_age=500)
+    databaseenv = dj_database_url.config(default=NEON_URL, conn_max_age=500)
 else: 
-    databaseenv = dj_database_url.config(default=os.getenv('DATABASE_URL'), conn_max_age=500)
+    databaseenv = dj_database_url.config(default=LOCALPOSTGRES, conn_max_age=500)
     
-DATABASES["default"] = databaseenv
+DATABASES['default']=databaseenv
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -182,11 +182,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DJOSER = {
     "USER_ID_FIELD": "username"
 }
+CORS_ALLOW_ALL_ORIGINS = True
 # Para vue 
 CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:8080",
+    "http://localhost:8080",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://practica3-psi.onrender.com", 
+    "https://practica4-psi.onrender.com", 
+]
+
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:5173',
+    'https://practica4-psi.onrender.com'
 ]
 
 CSRF_TRUSTED_ORIGINS = ['https://practica3-psi.onrender.com']
