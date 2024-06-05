@@ -86,26 +86,20 @@ class ChessMove(models.Model):
     promotion = models.CharField(max_length=1, null=True, blank=True)
 
     def save(self, *args, **kwargs):
-
-        if self.game.status != 'active':
-            raise Exception('La partida no está activa')
-
-        board = chess.Board(self.game.board_state)
-        # Movimiento + Comprobación de si promociona
-        move = chess.Move.from_uci(self.move_from + self.move_to +
-                                   (self.promotion if self.promotion
-                                    not in [None, ''] else ''))
-        if move not in board.legal_moves:
-            raise ValueError('Movimiento no válido')
-
-        if self.promotion == '':
-            self.promotion = None
-
-        board.push(move)
-        self.game.board_state = board.fen()
-
-        super().save(*args, **kwargs)
-        self.game.save()
+        self.game.refresh_from_db()
+        if self.game.status == 'active':
+            fen_board = chess.Board(self.game.board_state)
+            coords = str(self.move_from)+str(self.move_to)
+            if self.promotion:
+                coords = coords + str(self.promotion)
+            move = chess.Move.from_uci(coords)
+            if move not in fen_board.legal_moves:
+                raise ValueError("Error, accion ilegal")
+            else:
+                fen_board.push(move)
+                self.game.board_state = fen_board.fen()
+                self.game.save()
+                super().save(*args, **kwargs)
 
     def __str__(self):
         if self.promotion:

@@ -82,7 +82,6 @@ class ChessConsumer(WebsocketConsumer):
 
     # 2º Peticion y cualquiera -> la maneja receive
     def receive(self, text_data):
-
         data = json.loads(text_data)
         message_type = data.get('type')
 
@@ -123,7 +122,6 @@ class ChessConsumer(WebsocketConsumer):
                 game.status = 'finished'
                 game.save()
             chess_move.save()
-
             # Envía el movimiento a todos los jugadores en el mismo juego
             async_to_sync(self.channel_layer.group_send)(
                 self.room_group_name,
@@ -146,7 +144,6 @@ class ChessConsumer(WebsocketConsumer):
         """ This method is called when the server sends a message
         to the WebSocket connection. It sends the message to the client.
         """
-
         message = event['message']['message']
         status = event['message']['status']
         playerID = event['message']['playerID']
