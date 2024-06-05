@@ -39,13 +39,6 @@ class ChessGameViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin,
                              'Anomalous games found and deleted')},
                             status=status.HTTP_400_BAD_REQUEST)
         
-        # Comprobar si hay un juego activo
-        active_game = ChessGame.objects.filter(status=ChessGame.ACTIVE).first()
-        if active_game:
-            return Response({'detail': ('Create Error: '
-                            'Game is already active')},
-                            status=status.HTTP_400_BAD_REQUEST)
-        
         # 1 - Verificar si hay juegos disponibles con un jugador ausente ->
         # me devuelve la primera clase de Chessgame que lo cumpla
         game = ChessGame.objects.filter(Q(whitePlayer__isnull=True) |
